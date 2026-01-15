@@ -338,30 +338,6 @@ async function computeWithRpc(rpcUrl) {
   const timeSpan = endBlockObj.timestamp - startBlockObj.timestamp;
   if (blockSpan <= 0 || timeSpan <= 0) throw new Error('Bad interpolation anchors.');
 
-  async function refineBlockAtOrBefore(targetTs, estBlock) {
-    let bNum = Math.min(Math.max(estBlock, startBlockForInterp), endBlockForInterp);
-    let b = await getBlock(provider, bNum);
-
-    let steps = 0;
-    while (b.timestamp > targetTs && bNum > startBlockForInterp) {
-      bNum--;
-      b = await getBlock(provider, bNum);
-      if (++steps > 30) return await findLastBlockAtOrBefore(provider, targetTs, startBlockForInterp, endBlockForInterp);
-    }
-
-    steps = 0;
-    while (bNum < endBlockForInterp) {
-      const next = await getBlock(provider, bNum + 1);
-      if (next.timestamp <= targetTs) {
-        bNum++;
-        b = next;
-        if (++steps > 30) return await findLastBlockAtOrBefore(provider, targetTs, startBlockForInterp, endBlockForInterp);
-      } else break;
-    }
-
-    return bNum;
-  }
-
   logp(`[calc] locating 168 hourly boundary blocks...`);
   const boundaryBlocks = [];
   for (let i = 0; i < boundaries.length; i++) {
